@@ -24,18 +24,30 @@ See `docs/architecture.md` for the full diagram and per-stage responsibilities.
 
 ## Commands
 
-| Task | Command | Status |
-|------|---------|--------|
-| Backend deps | `pip install -e ".[dev]"` | works |
-| Lint (Python) | `ruff check .` | works |
-| Test (Python) | `pytest` | works (add tests first) |
-| Frontend dev | `npm run dev` (in `frontend/`) | **[TODO]** toolchain not set up |
-| Frontend build | `npm run build` | **[TODO]** not yet defined |
-| Frontend lint | `npm run lint` | **[TODO]** not yet defined |
-| Frontend test | `npm run test` | **[TODO]** not yet defined |
+Backend (repo root, in the `.venv`):
 
-Do not invent passing frontend commands — the Vite + React + TS toolchain does
-not exist yet. Mark anything unbuilt `[TODO]`.
+| Task | Command |
+|------|---------|
+| Backend deps | `pip install -e ".[dev]"` |
+| Lint | `ruff check .` |
+| Format check | `ruff format --check .` |
+| Types | `mypy ingestion analysis api tests` |
+| Test | `pytest` |
+
+Frontend (in `frontend/`):
+
+| Task | Command |
+|------|---------|
+| Deps | `npm install` |
+| Dev server | `npm run dev` |
+| Build | `npm run build` (runs `tsc -b` then `vite build`) |
+| Typecheck | `npm run typecheck` |
+| Lint | `npm run lint` |
+| Test | `npm run test` |
+
+Still `[planned]`: PostgreSQL schema/migrations, the real ingestion/analysis/API
+logic, and all data components/pages. Mark anything unbuilt `[planned]`/`[TODO]`;
+never invent passing commands for code that does not exist.
 
 ## Design system — single source of truth
 
