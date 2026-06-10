@@ -31,3 +31,7 @@ frontend/build/
 .idea/
 .vscode/
 .DS_Store
+
+# Local Claude Code bootstrap tooling — never commit
+CLAUDE_SETUP.md
+CLAUDE_BUILD.md
