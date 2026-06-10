@@ -1,0 +1,99 @@
+/**
+ * CivicLens design tokens — CSS custom properties.
+ * Canonical source for all UI colour/typography variables, per
+ * docs/design-system.md §1. Mirrored (for JS/D3/Recharts) by src/tokens.ts.
+ *
+ * Light values live on :root. Dark values apply (a) automatically via
+ * prefers-color-scheme when no explicit theme class is set, and (b) when an
+ * ancestor has the `.dark` class. `.light` forces light regardless of OS.
+ *
+ * This file is exempt from the design-guard no-raw-hex rule: it IS the token
+ * definition. Never add a token here that is not defined in §1.
+ */
+
+:root,
+.light {
+  /* §1a — base neutrals (light) */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f4;
+  --color-bg-tertiary: #ebebea;
+  --color-bg-elevated: #ffffff;
+
+  --color-border-subtle: #e4e4e3;
+  --color-border-default: #d4d4d2;
+  --color-border-strong: #a3a3a0;
+
+  --color-text-primary: #111110;
+  --color-text-secondary: #6b6b69;
+  --color-text-tertiary: #a3a3a0;
+  --color-text-disabled: #d4d4d2;
+
+  /* §1a — accent (Polish flag red); mode-independent */
+  --color-accent: #dc143c;
+  --color-accent-hover: #b01030;
+  --color-accent-subtle: #fee7ec;
+  --color-accent-text: #ffffff;
+
+  /* §1a — semantic data states (data only, not decoration) */
+  --color-positive: #1d9e75;
+  --color-negative: #d85a30;
+  --color-abstain: #888780;
+  --color-anomaly: #dc143c;
+
+  /* §1a — data-visualisation series (charts only) */
+  --color-data-1: #111110;
+  --color-data-2: #6b6b69;
+  --color-data-3: #d4d4d2;
+
+  /* §1b — typography */
+  --font-family-base: 'Inter', system-ui, sans-serif;
+  --font-family-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+
+  /* §1f — motion */
+  --duration-instant: 0ms;
+  --duration-fast: 100ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --easing-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --easing-linear: linear;
+}
+
+.dark {
+  /* §1a — base neutrals (dark) */
+  --color-bg-primary: #0f0f0f;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-tertiary: #242424;
+  --color-bg-elevated: #222222;
+
+  --color-border-subtle: #2c2c2a;
+  --color-border-default: #3a3a38;
+  --color-border-strong: #525250;
+
+  --color-text-primary: #f0efec;
+  --color-text-secondary: #a3a3a0;
+  --color-text-tertiary: #6b6b69;
+  --color-text-disabled: #3a3a38;
+
+  /* accent: only the subtle tint changes in dark mode (§1a) */
+  --color-accent-subtle: #2d0a12;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-bg-primary: #0f0f0f;
+    --color-bg-secondary: #1a1a1a;
+    --color-bg-tertiary: #242424;
+    --color-bg-elevated: #222222;
+
+    --color-border-subtle: #2c2c2a;
+    --color-border-default: #3a3a38;
+    --color-border-strong: #525250;
+
+    --color-text-primary: #f0efec;
+    --color-text-secondary: #a3a3a0;
+    --color-text-tertiary: #6b6b69;
+    --color-text-disabled: #3a3a38;
+
+    --color-accent-subtle: #2d0a12;
+  }
+}
