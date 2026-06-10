@@ -16,17 +16,17 @@ class SejmClient:
     def __init__(self, base_url: str = BASE_URL) -> None:
         self.base_url = base_url
 
-    def get_terms(self) -> list[dict]:
+    def get_terms(self) -> list[dict[str, object]]:
         """Return all parliamentary terms."""
         # TODO: GET {base_url}/term
         raise NotImplementedError
 
-    def get_mps(self, term: int) -> list[dict]:
+    def get_mps(self, term: int) -> list[dict[str, object]]:
         """Return all MPs for a given term."""
         # TODO: GET {base_url}/term{term}/MP
         raise NotImplementedError
 
-    def get_votings(self, term: int, sitting: int) -> list[dict]:
+    def get_votings(self, term: int, sitting: int) -> list[dict[str, object]]:
         """Return all votings held during a given sitting."""
         # TODO: GET {base_url}/term{term}/votings/{sitting}
         raise NotImplementedError

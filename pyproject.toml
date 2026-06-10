@@ -15,7 +15,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff"]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "httpx",          # also used by fastapi TestClient
+    "respx",          # mock httpx in ingestion tests
+    "pandas-stubs",   # typing for pandas (analysis)
+]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -23,3 +31,27 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["ingestion", "analysis", "api"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["ingestion", "analysis", "api", "tests"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, pyupgrade, bugbear, comprehensions, simplify.
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+# FastAPI route decorators are typed but mypy can't always prove it; allow them.
+disallow_untyped_decorators = false
+# pandas/networkx are partially typed; don't fail on their internals.
+[[tool.mypy.overrides]]
+module = ["networkx.*", "pandas.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
