@@ -34,3 +34,4 @@ frontend/build/
 
 # Local Claude Code bootstrap tooling — never commit
 CLAUDE_SETUP.md
+CLAUDE_BUILD.md
