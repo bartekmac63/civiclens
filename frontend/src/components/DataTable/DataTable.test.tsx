@@ -63,6 +63,26 @@ describe('DataTable (§2.2)', () => {
     expect(onRowClick).toHaveBeenCalledTimes(2);
   });
 
+  it('moves focus between rows with the arrow keys (§2.2)', async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable data={data} columns={columns} caption="MPs" onRowClick={() => {}} getRowId={(r) => r.id} />,
+    );
+    const [, row1, row2] = screen.getAllByRole('row'); // row 0 = header
+    row1.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(row2).toHaveFocus();
+    await user.keyboard('{ArrowUp}');
+    expect(row1).toHaveFocus();
+  });
+
+  it('captions "X of Y" when a filter hides rows (§3.1)', () => {
+    render(
+      <DataTable data={data.slice(0, 1)} columns={columns} caption="MPs" totalCount={3} />,
+    );
+    expect(screen.getByText(/MPs: 1 of 3/)).toBeInTheDocument();
+  });
+
   it('shows an empty state when there is no data', () => {
     render(<DataTable data={[]} columns={columns} caption="MPs" />);
     expect(screen.getByText('No results.')).toBeInTheDocument();

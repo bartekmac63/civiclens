@@ -102,6 +102,7 @@ export function MPsPage() {
             data={filtered}
             columns={columns}
             caption="MPs"
+            totalCount={mps.length}
             getRowId={(mp) => String(mp.id)}
             onRowClick={(mp) => navigate(`/mps/${mp.id}`)}
             emptyState={<EmptyState onClear={() => setQuery('')} />}

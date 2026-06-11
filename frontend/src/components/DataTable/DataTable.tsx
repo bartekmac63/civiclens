@@ -26,6 +26,8 @@ export interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   /** Describes the data for the table caption, e.g. "MPs". */
   caption: string;
+  /** Unfiltered total; when it differs the caption reads "X of Y" (§3.1). */
+  totalCount?: number;
   getRowId?: (row: T) => string;
   onRowClick?: (row: T) => void;
   selectedRowId?: string;
@@ -42,6 +44,7 @@ export function DataTable<T>({
   data,
   columns,
   caption,
+  totalCount,
   getRowId,
   onRowClick,
   selectedRowId,
@@ -93,7 +96,22 @@ export function DataTable<T>({
         onKeyDown={
           onRowClick
             ? (e) => {
-                if (e.key === 'Enter') onRowClick(row.original);
+                if (e.key === 'Enter') {
+                  onRowClick(row.original);
+                } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                  // §2.2 — arrow keys move focus between rows. Walk the DOM
+                  // (skipping the aria-hidden virtual spacer rows).
+                  e.preventDefault();
+                  const focusable = Array.from(
+                    e.currentTarget.parentElement?.querySelectorAll<HTMLElement>(
+                      'tr[tabindex]',
+                    ) ?? [],
+                  );
+                  const here = focusable.indexOf(e.currentTarget);
+                  const next =
+                    focusable[here + (e.key === 'ArrowDown' ? 1 : -1)];
+                  next?.focus();
+                }
               }
             : undefined
         }
@@ -128,10 +146,16 @@ export function DataTable<T>({
       // virtualising, so the scroll container drives the virtual window.
       style={virtualize ? { maxHeight: '70vh' } : undefined}
     >
-      <table className="w-full border-collapse">
+      <table
+        className="w-full border-collapse"
+        // When virtualised, DOM rows ≠ data rows; report the true count (+1 header).
+        aria-rowcount={virtualize ? rows.length + 1 : undefined}
+      >
         <caption className="px-4 py-2 text-left text-sm text-text-secondary">
           {caption}: {rows.length}
-          {data.length !== rows.length ? ` of ${data.length}` : ''}
+          {totalCount !== undefined && totalCount !== rows.length
+            ? ` of ${totalCount}`
+            : ''}
         </caption>
         <thead className="sticky top-0 bg-bg-primary">
           {table.getHeaderGroups().map((hg) => (
