@@ -108,6 +108,8 @@ def get_mp_votes(
         """,
         (term, mp_id),
     ).fetchall()
+    # Per-vote defection flags need the whole term's votes (club majorities).
+    flags = metrics.defection_flags(load_vote_records(conn, term), mp_id=mp_id)
     return [
         APIVote(
             sitting=r[0],
@@ -117,6 +119,7 @@ def get_mp_votes(
             kind=r[4],
             vote=r[5],
             club=r[6],
+            defected=flags.get((r[0], r[1])),
         )
         for r in rows
     ]

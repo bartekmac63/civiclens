@@ -120,6 +120,8 @@ def test_get_mp_votes(client: TestClient) -> None:
     assert resp.status_code == 200
     votes = resp.json()
     assert [v["vote"] for v in votes] == ["YES", "NO"]
+    # v1: with the YES majority -> False; v2: NO against YES majority -> True.
+    assert [v["defected"] for v in votes] == [False, True]
 
 
 def test_defection_score_endpoint_carries_provenance(client: TestClient) -> None:

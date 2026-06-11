@@ -38,6 +38,9 @@ class APIVote(BaseModel):
     kind: str
     vote: str | None
     club: str | None
+    # True = voted against the club majority; None = not considered
+    # (non-countable vote, no club, or no club majority that voting).
+    defected: bool | None
 
 
 class Provenance(BaseModel):
