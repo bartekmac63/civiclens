@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
 import psycopg
 import pytest
-from ingestion.db import connect
 from ingestion.migrate import apply_migrations
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "sejm"
+
+# Tests always use a dedicated database (never production civiclens), because
+# the db_conn teardown truncates tables. Override with TEST_DATABASE_URL.
+TEST_DSN = os.environ.get(
+    "TEST_DATABASE_URL",
+    "postgresql://civiclens:civiclens@localhost:5432/civiclens_test",
+)
 
 
 def _load(name: str) -> Any:
@@ -25,6 +32,12 @@ def load_fixture() -> Callable[[str], Any]:
 
 
 @pytest.fixture
+def test_dsn() -> str:
+    """DSN of the dedicated test database (for code that opens its own conn)."""
+    return TEST_DSN
+
+
+@pytest.fixture
 def db_conn() -> Iterator[psycopg.Connection]:
     """A migrated connection; each test's writes are rolled back.
 
@@ -32,9 +45,9 @@ def db_conn() -> Iterator[psycopg.Connection]:
     without a local Postgres (CI provisions one in Phase 8).
     """
     try:
-        conn = connect()
+        conn = psycopg.connect(TEST_DSN)
     except psycopg.OperationalError as exc:  # pragma: no cover - env dependent
-        pytest.skip(f"no database available: {exc}")
+        pytest.skip(f"no test database available: {exc}")
 
     apply_migrations(conn)  # commits the schema
     try:
