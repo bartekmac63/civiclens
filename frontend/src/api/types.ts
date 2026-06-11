@@ -25,6 +25,8 @@ export interface APIVote {
   kind: string;
   vote: string | null;
   club: string | null;
+  /** True = against the club majority; null = not considered for defection. */
+  defected: boolean | null;
 }
 
 export interface Provenance {

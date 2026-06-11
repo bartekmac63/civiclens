@@ -15,8 +15,8 @@ const detail: APIMPDetail = {
 };
 
 const votes: APIVote[] = [
-  { sitting: 1, votingNumber: 8, title: 'Budget vote', date: '2023-11-13T15:00:00', kind: 'ELECTRONIC', vote: 'NO', club: 'PiS' },
-  { sitting: 1, votingNumber: 9, title: 'Other vote', date: '2023-11-14T15:00:00', kind: 'ELECTRONIC', vote: 'YES', club: 'PiS' },
+  { sitting: 1, votingNumber: 8, title: 'Budget vote', date: '2023-11-13T15:00:00', kind: 'ELECTRONIC', vote: 'NO', club: 'PiS', defected: true },
+  { sitting: 1, votingNumber: 9, title: 'Other vote', date: '2023-11-14T15:00:00', kind: 'ELECTRONIC', vote: 'YES', club: 'PiS', defected: false },
 ];
 
 function renderAt(id: string) {
@@ -47,6 +47,25 @@ describe('MPDetailPage (§3.2)', () => {
     renderAt('1');
     expect(await screen.findByText('Budget vote')).toBeInTheDocument();
     expect(screen.getByText('Other vote')).toBeInTheDocument();
+  });
+
+  it('renders the defection timeline with an accessible summary', async () => {
+    renderAt('1');
+    // 2 considered votes; defection on the first → cumulative ends at 0.50.
+    const chart = await screen.findByRole('img', {
+      name: /Cumulative defection rate over 2 considered votes, ending at 0\.50/,
+    });
+    expect(chart).toBeInTheDocument();
+  });
+
+  it('explains when there is no timeline data instead of an empty chart', async () => {
+    vi.mocked(fetchMPVotes).mockResolvedValueOnce(
+      votes.map((v) => ({ ...v, defected: null })),
+    );
+    renderAt('1');
+    expect(
+      await screen.findByText(/Not enough considered votes/),
+    ).toBeInTheDocument();
   });
 
   it('shows an error state if the MP cannot be loaded', async () => {

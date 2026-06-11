@@ -5,6 +5,8 @@ import {
   Bar,
   BarChart,
   Cell,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,6 +27,48 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+interface TimelinePoint {
+  /** 1-based position among the MP's considered votes, in date order. */
+  index: number;
+  date: string;
+  /** Cumulative defection rate after this vote (0–1). */
+  score: number;
+  defected: boolean;
+}
+
+/** Cumulative defection rate over the MP's considered votes (§3.2 timeline). */
+function buildTimeline(votes: APIVote[]): TimelinePoint[] {
+  const points: TimelinePoint[] = [];
+  let considered = 0;
+  let defections = 0;
+  for (const vote of votes) {
+    if (vote.defected === null) continue; // not considered — no data point
+    considered += 1;
+    if (vote.defected) defections += 1;
+    points.push({
+      index: considered,
+      date: vote.date,
+      score: defections / considered,
+      defected: vote.defected,
+    });
+  }
+  return points;
+}
+
+// §3.4 — "dot at anomaly points only": mark defections, hide conforming votes.
+function TimelineDot(props: {
+  cx?: number;
+  cy?: number;
+  index?: number;
+  payload?: TimelinePoint;
+}) {
+  const { cx, cy, payload } = props;
+  if (!payload?.defected || cx === undefined || cy === undefined) {
+    return <circle cx={cx} cy={cy} r={0} fill="none" />;
+  }
+  return <circle cx={cx} cy={cy} r={3} fill="var(--color-anomaly)" />;
 }
 
 const VOTE_BADGE: Record<string, 'vote-yes' | 'vote-no' | 'vote-abstain' | 'status'> = {
@@ -57,6 +101,8 @@ export function MPDetailPage() {
       { name: 'Absent', value: count('ABSENT'), fill: 'var(--color-data-3)' },
     ];
   }, [votes.data]);
+
+  const timeline = useMemo(() => buildTimeline(votes.data ?? []), [votes.data]);
 
   const columns = useMemo<ColumnDef<APIVote>[]>(
     () => [
@@ -142,6 +188,65 @@ export function MPDetailPage() {
           accentOnAnomaly={score !== null && score >= 0.5}
         />
       </div>
+
+      <section className="mt-10">
+        <h2 className="text-lg font-medium text-text-primary">
+          Defection score over time
+        </h2>
+        {timeline.length > 0 ? (
+          <>
+            <div
+              className="mt-3 h-48 w-full"
+              role="img"
+              aria-label={`Cumulative defection rate over ${timeline.length} considered votes, ending at ${timeline[timeline.length - 1].score.toFixed(2)}. Dots mark defections.`}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={timeline} margin={{ top: 8, right: 8 }}>
+                  <XAxis
+                    dataKey="index"
+                    tick={civicChartsTheme.axis.tick}
+                    axisLine={civicChartsTheme.axis.line}
+                  />
+                  <YAxis
+                    domain={[0, 1]}
+                    tick={civicChartsTheme.axis.tick}
+                    axisLine={civicChartsTheme.axis.line}
+                    width={40}
+                  />
+                  <Tooltip
+                    contentStyle={civicChartsTheme.tooltip.contentStyle}
+                    labelStyle={civicChartsTheme.tooltip.labelStyle}
+                    formatter={(value) => [Number(value).toFixed(3), 'score']}
+                    labelFormatter={(index) => `Vote ${index}`}
+                  />
+                  {/* §3.4: single line, no fill, dot at anomaly points only. */}
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke="var(--color-data-1)"
+                    strokeWidth={1.5}
+                    fill="none"
+                    dot={<TimelineDot />}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-1 text-sm text-text-tertiary">
+              Cumulative share of considered votes cast against the club
+              majority; red dots mark individual defections.
+            </p>
+          </>
+        ) : votes.loading ? (
+          <div className="mt-3">
+            <Skeleton height={192} radius="md" />
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-text-secondary">
+            Not enough considered votes to chart a defection timeline.
+          </p>
+        )}
+      </section>
 
       <section className="mt-10">
         <h2 className="text-lg font-medium text-text-primary">Vote breakdown</h2>
