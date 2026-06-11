@@ -1,5 +1,7 @@
 """Data ingestion package.
 
-Mirrors open data from the Sejm REST API into PostgreSQL. See ``sejm_client``
-for the API wrapper. Nothing here is implemented yet — this is a scaffold.
+Mirrors open data from the Sejm REST API into PostgreSQL. ``sejm_client`` does
+the HTTP I/O, ``models`` parses payloads into typed records, ``repository`` and
+``migrate`` handle persistence, and ``sync`` orchestrates a full or incremental
+run (``python -m ingestion``).
 """

@@ -52,6 +52,13 @@ disallow_untyped_decorators = false
 module = ["networkx.*", "pandas.*"]
 ignore_missing_imports = true
 
+# Tests use pytest fixtures (injected params); keep strict typing on product
+# code but don't force annotations on every fixture parameter.
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"

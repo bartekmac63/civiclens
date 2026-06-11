@@ -1,0 +1,27 @@
+[
+  {
+    "date": "2023-11-13",
+    "proceeding": 1,
+    "votingsNum": 8
+  },
+  {
+    "date": "2023-11-14",
+    "proceeding": 1,
+    "votingsNum": 5
+  },
+  {
+    "date": "2023-11-21",
+    "proceeding": 1,
+    "votingsNum": 10
+  },
+  {
+    "date": "2023-11-28",
+    "proceeding": 1,
+    "votingsNum": 8
+  },
+  {
+    "date": "2023-11-29",
+    "proceeding": 1,
+    "votingsNum": 23
+  }
+]

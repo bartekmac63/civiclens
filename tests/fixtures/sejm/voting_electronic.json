@@ -1,0 +1,142 @@
+{
+  "abstain": 5,
+  "date": "2023-11-13T19:45:35",
+  "description": "w sprawie wyboru Piotra Zgorzelskiego na wicemarszałka Sejmu",
+  "kind": "ELECTRONIC",
+  "links": [
+    {
+      "href": "https://api.sejm.gov.pl/sejm/term10/votings/1/8/pdf",
+      "rel": "pdf"
+    }
+  ],
+  "majorityType": "ABSOLUTE_MAJORITY",
+  "majorityVotes": 229,
+  "no": 184,
+  "notParticipating": 4,
+  "present": 0,
+  "sitting": 1,
+  "sittingDay": 1,
+  "term": 10,
+  "title": "Pkt. 3 Wybór Wicemarszałków Sejmu RP (druki nr 3, 4, 5, 6, 7 i 8)",
+  "topic": "Głosowanie nad kandydaturą Posła Piotra Zgorzelskiego na stanowisko Wicemarszałka Sejmu",
+  "totalVoted": 456,
+  "votes": [
+    {
+      "MP": 1,
+      "club": "PiS",
+      "firstName": "Andrzej",
+      "lastName": "Adamczyk",
+      "secondName": "Mieczysław",
+      "vote": "NO"
+    },
+    {
+      "MP": 2,
+      "club": "KO",
+      "firstName": "Piotr",
+      "lastName": "Adamowicz",
+      "vote": "YES"
+    },
+    {
+      "MP": 3,
+      "club": "PiS",
+      "firstName": "Adam",
+      "lastName": "Andruszkiewicz",
+      "vote": "NO"
+    },
+    {
+      "MP": 4,
+      "club": "PiS",
+      "firstName": "Waldemar",
+      "lastName": "Andzel",
+      "secondName": "Franciszek",
+      "vote": "NO"
+    },
+    {
+      "MP": 5,
+      "club": "PiS",
+      "firstName": "Dorota",
+      "lastName": "Arciszewska-Mielewczyk",
+      "secondName": "Irvina",
+      "vote": "NO"
+    },
+    {
+      "MP": 6,
+      "club": "PiS",
+      "firstName": "Jan",
+      "lastName": "Ardanowski",
+      "secondName": "Krzysztof",
+      "vote": "ABSTAIN"
+    },
+    {
+      "MP": 7,
+      "club": "PiS",
+      "firstName": "Iwona",
+      "lastName": "Arent",
+      "secondName": "Ewa",
+      "vote": "NO"
+    },
+    {
+      "MP": 8,
+      "club": "KO",
+      "firstName": "Bartosz",
+      "lastName": "Arłukowicz",
+      "secondName": "Adam",
+      "vote": "YES"
+    },
+    {
+      "MP": 9,
+      "club": "PiS",
+      "firstName": "Marek",
+      "lastName": "Ast",
+      "vote": "NO"
+    },
+    {
+      "MP": 10,
+      "club": "KO",
+      "firstName": "Urszula",
+      "lastName": "Augustyn",
+      "vote": "YES"
+    },
+    {
+      "MP": 11,
+      "club": "PiS",
+      "firstName": "Piotr",
+      "lastName": "Babinetz",
+      "secondName": "Mieczysław",
+      "vote": "NO"
+    },
+    {
+      "MP": 12,
+      "club": "PiS",
+      "firstName": "Ryszard",
+      "lastName": "Bartosik",
+      "vote": "NO"
+    },
+    {
+      "MP": 13,
+      "club": "PSL",
+      "firstName": "Władysław",
+      "lastName": "Bartoszewski",
+      "secondName": "Teofil",
+      "vote": "YES"
+    },
+    {
+      "MP": 14,
+      "club": "PiS",
+      "firstName": "Barbara",
+      "lastName": "Bartuś",
+      "secondName": "Halina",
+      "vote": "NO"
+    },
+    {
+      "MP": 15,
+      "club": "PSL",
+      "firstName": "Paweł",
+      "lastName": "Bejda",
+      "secondName": "Jan",
+      "vote": "YES"
+    }
+  ],
+  "votingNumber": 8,
+  "yes": 267
+}
