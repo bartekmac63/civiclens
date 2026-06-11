@@ -53,6 +53,11 @@ export default {
         negative: 'var(--color-negative)',
         abstain: 'var(--color-abstain)',
         anomaly: 'var(--color-anomaly)',
+        // Subtle tints of the §1 semantic colours, for Badge backgrounds (§2.3).
+        // Derived from the canonical tokens — not new colours.
+        'positive-subtle': 'color-mix(in srgb, var(--color-positive) 12%, transparent)',
+        'negative-subtle': 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
+        'abstain-subtle': 'color-mix(in srgb, var(--color-abstain) 14%, transparent)',
         // §1a Tailwind mapping — fixed accent + data states (also in tokens.ts).
         civiclens: {
           accent: '#DC143C',
@@ -79,6 +84,11 @@ export default {
       },
       letterSpacing: {
         label: '0.06em', // §2.4 StatCard label
+      },
+      // §2.1 Button active / §2.5 MPCard active — press-down scale.
+      scale: {
+        98: '0.98',
+        99: '0.99',
       },
       // §1d — border radius.
       borderRadius: {
