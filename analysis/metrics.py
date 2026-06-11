@@ -84,6 +84,31 @@ def defection_scores(records: Iterable[VoteRecord]) -> dict[int, float | None]:
     }
 
 
+def defection_flags(
+    records: Iterable[VoteRecord], *, mp_id: int
+) -> dict[Hashable, bool | None]:
+    """Per-voting defection flags for one MP (the §3.2 timeline's raw data).
+
+    For every voting the MP appears in: True if the MP cast a countable vote
+    against their club's majority, False if with it, and None when the voting
+    is not considered (MP not countable, no club, or the club had no majority).
+    """
+    records = list(records)
+    countable = _countable(records)
+    positions = _club_positions(countable)
+
+    flags: dict[Hashable, bool | None] = {}
+    for r in records:
+        if r.mp_id != mp_id:
+            continue
+        if r.vote in COUNTABLE and r.club is not None:
+            position = positions[(r.voting_id, r.club)]
+            flags[r.voting_id] = None if position is None else r.vote != position
+        else:
+            flags[r.voting_id] = None
+    return flags
+
+
 def club_cohesion(records: Iterable[VoteRecord]) -> dict[str, float | None]:
     """Per-club mean Rice index over votings with at least one yes/no vote."""
     yes_no: dict[tuple[Hashable, str], list[str]] = defaultdict(list)

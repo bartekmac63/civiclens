@@ -9,6 +9,7 @@ from __future__ import annotations
 from analysis.metrics import (
     VoteRecord,
     club_cohesion,
+    defection_flags,
     defection_scores,
     majority_vote,
 )
@@ -119,3 +120,32 @@ def test_cohesion_averages_across_votings() -> None:
     records = [rec(1, mp, "A", "YES") for mp in range(1, 8)] + [rec(1, 8, "A", "NO")]
     records += [rec(2, mp, "A", "YES") for mp in range(1, 9)]
     assert club_cohesion(records)["A"] == 0.875
+
+
+# -- defection_flags (per-vote, for the §3.2 timeline) ----------------------
+def test_flags_mark_only_the_defecting_vote() -> None:
+    # Voting 1: mp 8 defects (NO vs YES majority). Voting 2: mp 8 conforms.
+    records = [rec(1, mp, "A", "YES") for mp in range(1, 8)] + [rec(1, 8, "A", "NO")]
+    records += [rec(2, mp, "A", "YES") for mp in range(1, 9)]
+    flags = defection_flags(records, mp_id=8)
+    assert flags == {1: True, 2: False}
+
+
+def test_flags_are_none_when_not_considered() -> None:
+    # mp 8 ABSENT on voting 1; 2/2 tie on voting 2 -> neither is considered.
+    records = [rec(1, mp, "A", "YES") for mp in range(1, 8)] + [
+        rec(1, 8, "A", "ABSENT")
+    ]
+    records += [
+        rec(2, 7, "A", "YES"),
+        rec(2, 6, "A", "YES"),
+        rec(2, 8, "A", "NO"),
+        rec(2, 5, "A", "NO"),
+    ]
+    flags = defection_flags(records, mp_id=8)
+    assert flags == {1: None, 2: None}
+
+
+def test_flags_cover_only_the_requested_mps_votes() -> None:
+    records = [rec(1, 1, "A", "YES"), rec(1, 2, "A", "YES")]
+    assert defection_flags(records, mp_id=1) == {1: False}
