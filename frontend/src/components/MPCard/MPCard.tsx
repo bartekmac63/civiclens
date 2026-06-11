@@ -1,6 +1,7 @@
 import { Badge } from '@/components/Badge';
 import { DefectionScore } from '@/components/DefectionScore';
-import { partyColor, type PartyName } from '@/tokens';
+import { isPartyName } from '@/lib/party';
+import { partyColor } from '@/tokens';
 
 export interface MPCardProps {
   id: number;
@@ -11,10 +12,6 @@ export interface MPCardProps {
   /** Defection score 0–1, shown two decimals. */
   defectionScore: number;
   onClick?: () => void;
-}
-
-function isPartyName(p: string): p is PartyName {
-  return p in partyColor;
 }
 
 function initials(name: string): string {
