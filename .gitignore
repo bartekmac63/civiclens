@@ -35,3 +35,6 @@ frontend/build/
 # Local Claude Code bootstrap tooling — never commit
 CLAUDE_SETUP.md
 CLAUDE_BUILD.md
+
+# Local dev Postgres cluster (created by developers; never commit data)
+.pgdata/
