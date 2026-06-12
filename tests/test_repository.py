@@ -24,6 +24,19 @@ def test_upsert_voting_is_idempotent(db_conn, load_fixture) -> None:
     assert repository.stored_voting_numbers(db_conn, 10, 1) == {8}
 
 
+def test_upsert_quorum_voting_stores_present_votes(db_conn, load_fixture) -> None:
+    repository.upsert_term(db_conn, _term())
+    voting = Voting.from_api(load_fixture("voting_quorum.json"))
+
+    repository.upsert_voting(db_conn, voting)
+
+    assert repository.count_mp_votes(db_conn, 10) == len(voting.votes)
+    row = db_conn.execute(
+        "SELECT count(*) FROM mp_votes WHERE term = 10 AND vote = 'PRESENT'"
+    ).fetchone()
+    assert row is not None and row[0] == 4
+
+
 def test_upsert_mps_and_clubs(db_conn, load_fixture) -> None:
     repository.upsert_term(db_conn, _term())
     mps = [MP.from_api(m, term=10) for m in load_fixture("mps.json")]

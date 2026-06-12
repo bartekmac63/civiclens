@@ -16,8 +16,9 @@ from datetime import date, datetime
 from typing import Any
 
 # Per-MP vote values seen in the API. VOTE_VALID is used by ON_LIST votings
-# (the yes/no choice lives in ``listVotes``); analysis whitelists YES/NO/ABSTAIN.
-VOTE_VALUES = frozenset({"YES", "NO", "ABSTAIN", "ABSENT", "VOTE_VALID"})
+# (the yes/no choice lives in ``listVotes``); PRESENT by quorum roll-calls
+# ("wniosek o stwierdzenie kworum"); analysis whitelists YES/NO/ABSTAIN.
+VOTE_VALUES = frozenset({"YES", "NO", "ABSTAIN", "ABSENT", "VOTE_VALID", "PRESENT"})
 
 
 def _parse_date(value: str | None) -> date | None:

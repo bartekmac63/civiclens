@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ingestion.models import MP, Club, ProceedingDay, Term, Voting
+from ingestion.models import MP, VOTE_VALUES, Club, ProceedingDay, Term, Voting
 
 
 def test_parse_current_term(load_fixture) -> None:
@@ -66,6 +66,14 @@ def test_parse_on_list_voting_keeps_raw_vote_value(load_fixture) -> None:
     assert voting.kind == "ON_LIST"
     # ON_LIST records VOTE_VALID; analysis ignores it, ingestion stores it as-is.
     assert {v.vote for v in voting.votes} == {"VOTE_VALID"}
+
+
+def test_parse_quorum_voting_present_is_a_known_vote_value(load_fixture) -> None:
+    voting = Voting.from_api(load_fixture("voting_quorum.json"))
+    assert voting.topic == "wniosek o stwierdzenie kworum"
+    # Quorum roll-calls record PRESENT/ABSENT; both must be storable values.
+    assert {v.vote for v in voting.votes} == {"PRESENT", "ABSENT"}
+    assert {v.vote for v in voting.votes} <= VOTE_VALUES
 
 
 def test_summary_without_votes_has_empty_votes(load_fixture) -> None:
