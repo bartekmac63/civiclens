@@ -12,6 +12,7 @@ from analysis.metrics import (
     defection_flags,
     defection_scores,
     majority_vote,
+    pair_similarities,
 )
 
 
@@ -149,3 +150,60 @@ def test_flags_are_none_when_not_considered() -> None:
 def test_flags_cover_only_the_requested_mps_votes() -> None:
     records = [rec(1, 1, "A", "YES"), rec(1, 2, "A", "YES")]
     assert defection_flags(records, mp_id=1) == {1: False}
+
+
+# -- pair_similarities (co-voting, for the §3.3 BlocGraph) -------------------
+def test_identical_voters_have_similarity_one() -> None:
+    records = []
+    for voting in range(1, 4):  # 3 shared votings, always agreeing
+        records += [rec(voting, 1, "A", "YES"), rec(voting, 2, "A", "YES")]
+    sims = pair_similarities(records, min_shared=3)
+    assert sims[(1, 2)] == 1.0
+
+
+def test_opposite_voters_have_similarity_zero() -> None:
+    records = []
+    for voting in range(1, 4):
+        records += [rec(voting, 1, "A", "YES"), rec(voting, 2, "B", "NO")]
+    sims = pair_similarities(records, min_shared=3)
+    assert sims[(1, 2)] == 0.0
+
+
+def test_similarity_is_exact_fraction_and_abstain_can_agree() -> None:
+    # v1 agree YES, v2 agree ABSTAIN, v3 disagree, v4 disagree -> 2/4 = 0.5
+    records = [
+        rec(1, 1, "A", "YES"),
+        rec(1, 2, "A", "YES"),
+        rec(2, 1, "A", "ABSTAIN"),
+        rec(2, 2, "A", "ABSTAIN"),
+        rec(3, 1, "A", "YES"),
+        rec(3, 2, "A", "NO"),
+        rec(4, 1, "A", "NO"),
+        rec(4, 2, "A", "YES"),
+    ]
+    sims = pair_similarities(records, min_shared=4)
+    assert sims[(1, 2)] == 0.5
+
+
+def test_absent_votings_do_not_count_as_shared() -> None:
+    # Only v1 is shared (agree); v2 has mp2 ABSENT -> shared=1.
+    records = [
+        rec(1, 1, "A", "YES"),
+        rec(1, 2, "A", "YES"),
+        rec(2, 1, "A", "YES"),
+        rec(2, 2, "A", "ABSENT"),
+    ]
+    sims = pair_similarities(records, min_shared=1)
+    assert sims[(1, 2)] == 1.0
+
+
+def test_pairs_below_min_shared_are_excluded_not_faked() -> None:
+    records = [rec(1, 1, "A", "YES"), rec(1, 2, "A", "YES")]  # shared = 1
+    sims = pair_similarities(records, min_shared=2)
+    assert (1, 2) not in sims
+
+
+def test_pair_keys_are_ordered_low_high() -> None:
+    records = [rec(1, 9, "A", "YES"), rec(1, 3, "A", "YES")]
+    sims = pair_similarities(records, min_shared=1)
+    assert (3, 9) in sims and (9, 3) not in sims

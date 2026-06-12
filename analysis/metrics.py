@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
+from itertools import combinations
 
 COUNTABLE = frozenset({"YES", "NO", "ABSTAIN"})
 
@@ -107,6 +108,40 @@ def defection_flags(
         else:
             flags[r.voting_id] = None
     return flags
+
+
+def pair_similarities(
+    records: Iterable[VoteRecord], *, min_shared: int = 10
+) -> dict[tuple[int, int], float]:
+    """Co-voting similarity per MP pair (the §3.3 BlocGraph's raw data).
+
+    Similarity = agreements / shared over votings where BOTH MPs cast a
+    countable vote (jointly abstaining counts as agreement; ABSENT never counts
+    as participation). Pairs with fewer than ``min_shared`` shared votings are
+    excluded rather than given an unreliable number. Keys are ``(low, high)``
+    MP-id tuples.
+    """
+    by_voting: dict[Hashable, list[tuple[int, str]]] = defaultdict(list)
+    for r in records:
+        if r.vote in COUNTABLE:
+            assert r.vote is not None
+            by_voting[r.voting_id].append((r.mp_id, r.vote))
+
+    shared: dict[tuple[int, int], int] = defaultdict(int)
+    agreements: dict[tuple[int, int], int] = defaultdict(int)
+    for voters in by_voting.values():
+        voters.sort()  # ascending mp_id → pair keys come out (low, high)
+        for (mp_a, vote_a), (mp_b, vote_b) in combinations(voters, 2):
+            pair = (mp_a, mp_b)
+            shared[pair] += 1
+            if vote_a == vote_b:
+                agreements[pair] += 1
+
+    return {
+        pair: agreements[pair] / count
+        for pair, count in shared.items()
+        if count >= min_shared
+    }
 
 
 def club_cohesion(records: Iterable[VoteRecord]) -> dict[str, float | None]:
