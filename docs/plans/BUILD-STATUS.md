@@ -1,18 +1,17 @@
 # CivicLens build status — handoff
 
-Last updated: 2026-06-11. Written for the next session (switching to Fable 5)
-to resume without re-deriving state. Authoritative phase spec: `CLAUDE_BUILD.md`
+Last updated: 2026-06-12. Authoritative phase spec: `CLAUDE_BUILD.md`
 (local, gitignored). Operating rules there still apply — honesty, TDD for logic,
-design-system for UI, council-review for Phases 2/3/7, verify before "done",
-don't push without approval.
+design-system for UI, council-review for Phases 2/3/7, verify before "done".
 
-## Git topology (important)
+## Git topology
 
-All work is stacked **linearly on branch `feat/phase-6-pages`** — each phase
-branched off the previous, so this one branch contains Phases H + 0–6. `main`
-is still at the `chore/claude-setup` merge (`c9f0aa2`); nothing has been pushed.
-Continue Phase 7 on a new branch off `feat/phase-6-pages`, and integrate the
-whole stack into `main` when ready (with approval).
+The full phase stack (50 commits, Phases H + 0–8) was integrated into `main`
+via PR #3 (merge commit `be193d5`, 2026-06-12) and pushed to
+`github.com/bartekm123abc-byte/civiclens`. CI ran for real on GitHub Actions
+and passed on the PR, on the merge, and on the follow-up actions-version bump
+(`8871617`, checkout/setup-python/setup-node bumped to Node-24 majors ahead of
+GitHub's 2026-06-16 forced switch). Work from here: branch off `main`, PR back.
 
 ## Done (all committed, green)
 
@@ -36,13 +35,16 @@ Lint/types/build clean; design-guard clean on all UI files.
 ## Known honest gaps (don't paper over)
 
 - `/bills`, `/bills/{id}` return **501 [planned]** — bills (Sejm "prints") are
-  not ingested.
-- The real ingest is **bounded** to 80 votings (`--max-votings`); a full term is
-  thousands. Re-run `python -m ingestion --term 10` (no cap) to backfill; it's
-  resumable.
+  not ingested. **Decision (2026-06-12): stays [planned]** — it is a whole new
+  ingestion domain (separate endpoints, schema, routes) and the honesty rule
+  prefers a truthful 501 over a rushed feature. Build it as its own phase if
+  ever picked up.
+- Full term-10 backfill (uncapped `python -m ingestion --term 10`) started
+  2026-06-12; the Sejm API intermittently drops connections
+  (`RemoteProtocolError`), so it runs in a retry loop. Sync is resumable and
+  idempotent — re-run to continue from wherever it stopped.
 - axe's color-contrast rule can't run under jsdom (no paint); contrast is
   covered at token level by the §5 audit.
-- CI exists but has never run on GitHub (nothing pushed yet by instruction).
 
 ## Local environment (must be running)
 
