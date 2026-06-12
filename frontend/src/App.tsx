@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from 'react-router-dom';
+import BlocsPage from '@/pages/BlocsPage';
 import MPDetailPage from '@/pages/MPDetailPage';
 import MPsPage from '@/pages/MPsPage';
 
@@ -8,6 +9,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<MPsPage />} />
         <Route path="/mps/:id" element={<MPDetailPage />} />
+        <Route path="/blocs" element={<BlocsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

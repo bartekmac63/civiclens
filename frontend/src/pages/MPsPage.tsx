@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
@@ -78,7 +78,17 @@ export function MPsPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-medium text-text-primary">Members of the Sejm</h1>
+      <div className="flex items-baseline justify-between gap-4">
+        <h1 className="text-2xl font-medium text-text-primary">
+          Members of the Sejm
+        </h1>
+        <Link
+          to="/blocs"
+          className="text-base text-text-secondary underline-offset-4 hover:text-text-primary hover:underline"
+        >
+          Co-voting blocs →
+        </Link>
+      </div>
       <p className="mt-1 text-sm text-text-secondary">
         10th term · defection score = share of votes against the club majority
       </p>
