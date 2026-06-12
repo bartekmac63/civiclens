@@ -1,9 +1,9 @@
 """Topics (real, from votings) and the §4 routes not yet backed by data.
 
-/topics is derived from the ``topic`` recorded on real votings. /bills and
-/blocs are part of the §4 surface but are not yet served from data: bills
-(Sejm "prints") are not ingested, and blocs are the co-voting graph built in
-Phase 7. Rather than fabricate data, these return 501 with an honest note.
+/topics is derived from the ``topic`` recorded on real votings. The /bills
+routes are part of the §4 surface but bills (Sejm "prints") are not ingested
+yet; rather than fabricate data they return 501 with an honest note. /blocs
+became real in Phase 7 — see api.routers.blocs.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ _PLANNED_BILLS = (
     "Bills (Sejm prints) are not ingested yet — [planned]. "
     "See docs/plans for the roadmap."
 )
-_PLANNED_BLOCS = "Co-voting blocs are computed by the Phase 7 BlocGraph — [planned]."
 
 
 @router.get("/topics", response_model=list[APITopic])
@@ -48,8 +47,3 @@ def list_bills() -> None:
 @router.get("/bills/{bill_id}")
 def get_bill(bill_id: int) -> None:
     raise HTTPException(status_code=501, detail=_PLANNED_BILLS)
-
-
-@router.get("/blocs")
-def list_blocs() -> None:
-    raise HTTPException(status_code=501, detail=_PLANNED_BLOCS)

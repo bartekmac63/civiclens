@@ -60,3 +60,29 @@ class APIDefectionScore(BaseModel):
 class APITopic(BaseModel):
     topic: str
     votingCount: int
+
+
+class APIBlocNode(BaseModel):
+    id: int
+    firstName: str
+    lastName: str
+    club: str | None
+    defectionScore: float | None
+
+
+class APIBlocEdge(BaseModel):
+    a: int
+    b: int
+    similarity: float
+
+
+class APIBlocsProvenance(Provenance):
+    minSharedVotes: int
+    edgeFloor: float
+    edgeCap: int
+
+
+class APIBlocs(BaseModel):
+    nodes: list[APIBlocNode]
+    edges: list[APIBlocEdge]
+    provenance: APIBlocsProvenance

@@ -144,7 +144,80 @@ def test_topics_aggregates_real_votings(client: TestClient) -> None:
 def test_planned_routes_report_501(client: TestClient) -> None:
     assert client.get("/bills").status_code == 501
     assert client.get("/bills/1").status_code == 501
-    assert client.get("/blocs").status_code == 501
+
+
+def test_blocs_returns_nodes_edges_and_provenance(client: TestClient) -> None:
+    # Seed (see _seed): mps 1-3 share 2 ELECTRONIC votings.
+    # Agreements — (2,3): v1 YES/NO disagree? v1: mp2 YES, mp3 NO -> disagree;
+    # v2: mp2 YES, mp3 YES -> agree => 1/2. (1,2): v1 agree, v2 disagree => 1/2.
+    # (1,3): v1 disagree (YES vs NO), v2 disagree (NO vs YES) => 0/2.
+    resp = client.get("/blocs?term=10&minSimilarity=0.5&maxNodes=10")
+    assert resp.status_code == 200
+    body = resp.json()
+
+    # Only MP 1 exists in the mps table; nodes come from there.
+    assert [n["id"] for n in body["nodes"]] == [1]
+    assert body["nodes"][0]["defectionScore"] == 0.5
+
+    # All pairs are below min_shared (2 < 10) -> no edges, honestly.
+    assert body["edges"] == []
+    prov = body["provenance"]
+    assert prov["minSharedVotes"] == 10
+    assert prov["electronicVotingsInStore"] == 2
+    assert prov["edgeFloor"] == 0.5
+
+
+def test_blocs_edges_appear_once_min_shared_is_met(
+    client: TestClient, db_conn: psycopg.Connection
+) -> None:
+    # Make MPs 2 and 3 real nodes, then add 10 votings: 1+2 agree YES, 3 votes NO.
+    repository.upsert_mps(
+        db_conn,
+        [
+            MP(
+                10,
+                2,
+                "Piotr",
+                "Adamowicz",
+                None,
+                "PiS",
+                None,
+                None,
+                None,
+                True,
+                None,
+                None,
+            ),
+            MP(
+                10, 3, "Adam", "Trzeci", None, "PiS", None, None, None, True, None, None
+            ),
+        ],
+    )
+    for n in range(11, 21):
+        repository.upsert_voting(
+            db_conn,
+            _voting(
+                n,
+                [
+                    MPVote(1, "PiS", "YES"),
+                    MPVote(2, "PiS", "YES"),
+                    MPVote(3, "PiS", "NO"),
+                ],
+                "Topic B",
+            ),
+        )
+    db_conn.commit()
+
+    body = client.get("/blocs?term=10&minSimilarity=0.5&maxNodes=10").json()
+
+    # Hand-computed over the 12 shared votings:
+    # (1,2): agree on v1 + v11..20, disagree v2 -> 11/12 = 0.9167
+    # (1,3) 0/12 and (2,3) 1/12 -> below the 0.5 floor, excluded.
+    assert [(e["a"], e["b"], e["similarity"]) for e in body["edges"]] == [
+        (1, 2, 0.9167)
+    ]
+    # Nodes ranked by defection score: mp3 defects 11/12, mp1 1/12, mp2 0/12.
+    assert [n["id"] for n in body["nodes"]] == [3, 1, 2]
 
 
 def test_openapi_renders_with_the_section4_paths(client: TestClient) -> None:
