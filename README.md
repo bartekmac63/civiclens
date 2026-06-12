@@ -1,6 +1,3 @@
-![CivicLens](https://img.shields.io/badge/CivicLens-Parliamentary%20Intelligence-1D9E75?style=flat)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-
 # CivicLens
 
 > Tracks and analyses the activity of Poland's parliament (the Sejm) for journalists, researchers, and citizens who want machine-readable insight into how their representatives vote.
@@ -11,11 +8,13 @@ The Sejm publishes a large volume of open data — votes, sittings, MPs, clubs, 
 
 ## Features
 
-- [planned] Ingestion pipeline mirroring Sejm term, MP, club, and voting data into PostgreSQL
-- [planned] Incremental sync that pulls only the votings added since the last run
-- [planned] Voting-pattern analysis: club cohesion, cross-club agreement, per-MP rebel scoring
-- [planned] REST API exposing MPs, votings, and computed metrics
-- [planned] React frontend for browsing MPs and visualising voting patterns
+- **Built** — Ingestion pipeline mirroring Sejm terms, MPs, clubs, votings, and individual MP votes into PostgreSQL, with provenance (`fetched_at`) on every row
+- **Built** — Incremental sync that fetches only the votings missing since the last run (idempotent upserts; resumable; fails loudly rather than seeding fake data)
+- **Built** — Voting-pattern analysis: club cohesion (Rice index), per-MP defection scoring with per-vote defection flags, and pairwise co-voting similarity — all developed test-first against hand-checked fixtures; insufficient data yields `null`, never a fabricated zero
+- **Built** — REST API (FastAPI, typed responses + OpenAPI): `/mps`, `/mps/{id}`, `/mps/{id}/votes`, `/mps/{id}/defection-score`, `/topics`, `/blocs`
+- **Built** — React + TypeScript + Tailwind frontend: searchable virtualised MP table, MP detail with a defection-score timeline, and a D3 force-directed co-voting bloc graph with an accessible table fallback
+- [planned] Bills (Sejm "prints") ingestion — `/bills` currently returns an honest `501`
+- [planned] Full-term vote backfill — a bounded real ingest (80 votings / 36,800 MP votes, 10th term) is loaded and verified; the full term is one resumable `python -m ingestion --term 10` away
 
 ## Architecture
 
@@ -25,16 +24,19 @@ Data flows in one direction. The Sejm API is mirrored by an ingestion pipeline i
 Sejm API → ingestion → PostgreSQL → analysis (NLP / graph) → REST API → React frontend
 ```
 
+See `docs/architecture.md` for the full diagram and `docs/design-system.md` for the canonical UI design system.
+
 ## Tech stack
 
 | Component | Technology |
 |---|---|
 | Ingestion | Python, httpx |
 | Storage | PostgreSQL |
-| Analysis | Python, pandas, networkx |
+| Analysis | Python (pure, fixture-tested core) |
 | Backend API | FastAPI |
-| Frontend | React, TypeScript |
+| Frontend | React, TypeScript, Tailwind CSS, TanStack Table/Virtual, D3, Recharts |
 | Deployment | Docker, docker-compose |
+| CI | GitHub Actions (ruff · mypy · pytest · eslint · tsc · vitest incl. axe-core) |
 
 ## Getting started
 
@@ -47,36 +49,46 @@ Sejm API → ingestion → PostgreSQL → analysis (NLP / graph) → REST API �
 ### Installation
 
 ```bash
-# [TODO] these steps work once the modules are implemented
-git clone https://github.com/bartekm123abc-byte/civiclens.git
+git clone https://github.com/bartekmac63/civiclens.git
 cd civiclens
-pip install -e ".[dev]"          # [TODO] backend dependencies
-cd frontend && npm install       # [TODO] frontend dependencies
+pip install -e ".[dev]"          # backend (ingestion + analysis + API)
+cd frontend && npm install      # frontend
 ```
 
 ### Running locally
 
 ```bash
-# [TODO] placeholder commands until the services exist
-docker-compose up -d postgres    # [TODO] start the database
-python -m ingestion.sejm_client  # [TODO] run an initial ingestion
-uvicorn api.main:app --reload    # [TODO] start the API
-cd frontend && npm run dev       # [TODO] start the frontend
+docker-compose up -d postgres            # or any local PostgreSQL on :5432
+python -m ingestion --term 10            # migrate + ingest (add --max-votings N to bound it)
+uvicorn api.main:app --reload --port 8099
+cd frontend && npm run dev               # http://localhost:5173
+```
+
+The database DSN defaults to `postgresql://civiclens:civiclens@localhost:5432/civiclens`; override with `DATABASE_URL`. The frontend reads the API base from `VITE_API_URL` (default `http://localhost:8099`).
+
+### Tests
+
+```bash
+pytest                                   # backend (DB tests auto-skip without Postgres)
+cd frontend && npm run test             # frontend, incl. axe-core accessibility checks
 ```
 
 ## Data sources
 
-All data comes from the official Sejm API at https://api.sejm.gov.pl — it is fully open and requires no authentication or API key.
+All data comes from the official Sejm API at https://api.sejm.gov.pl — it is fully open and requires no authentication or API key. Every derived number in the API carries provenance (term, data extent, computed-at).
 
 ## Roadmap
 
-- [ ] Ingest MPs, clubs, and parliamentary terms
-- [ ] Ingest votings and individual MP votes
-- [ ] Incremental sync since last ingestion
-- [ ] Voting-pattern metrics (cohesion, rebel score)
-- [ ] REST API over MPs and metrics
-- [ ] React frontend
-- [ ] Dockerised deployment
+- [x] Ingest MPs, clubs, and parliamentary terms
+- [x] Ingest votings and individual MP votes
+- [x] Incremental sync since last ingestion
+- [x] Voting-pattern metrics (cohesion, defection score, co-voting similarity)
+- [x] REST API over MPs and metrics
+- [x] React frontend (MP list, MP detail, bloc graph)
+- [x] CI (GitHub Actions)
+- [ ] Bills (Sejm prints) ingestion and `/bills` routes
+- [ ] Full-term vote backfill
+- [ ] Dockerised API + frontend services
 
 ## Contributing
 

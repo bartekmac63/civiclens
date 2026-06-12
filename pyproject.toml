@@ -10,16 +10,50 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "psycopg[binary]",
-    "pandas",
-    "networkx",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff"]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "httpx",          # also used by fastapi TestClient
+    "respx",          # mock httpx in ingestion tests
+]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["ingestion", "analysis", "api"]
+packages = ["ingestion", "analysis", "api", "api.routers"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["ingestion", "analysis", "api", "tests"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, pyupgrade, bugbear, comprehensions, simplify.
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+# B008: FastAPI's Depends()/Query() default-argument pattern is intentional.
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+# FastAPI route decorators are typed but mypy can't always prove it; allow them.
+disallow_untyped_decorators = false
+
+# Tests use pytest fixtures (injected params); keep strict typing on product
+# code but don't force annotations on every fixture parameter.
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
