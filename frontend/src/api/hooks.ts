@@ -1,6 +1,7 @@
 /** Small data-fetching hooks (loading / error / data), no extra deps. */
 import { useEffect, useState } from 'react';
 import {
+  fetchBlocs,
   fetchMP,
   fetchMPDefectionScore,
   fetchMPVotes,
@@ -8,6 +9,7 @@ import {
   fetchTopics,
 } from './client';
 import type {
+  APIBlocs,
   APIDefectionScore,
   APIMP,
   APIMPDetail,
@@ -70,3 +72,6 @@ export const useMPDefectionScore = (
 
 export const useTopics = (term = 10): Resource<APITopic[]> =>
   useResource(() => fetchTopics(term), [term]);
+
+export const useBlocs = (term = 10): Resource<APIBlocs> =>
+  useResource(() => fetchBlocs(term), [term]);

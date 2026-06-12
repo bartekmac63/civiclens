@@ -5,6 +5,7 @@
  * than rendering fabricated data.
  */
 import type {
+  APIBlocs,
   APIDefectionScore,
   APIMP,
   APIMPDetail,
@@ -39,3 +40,6 @@ export const fetchMPDefectionScore = (
 
 export const fetchTopics = (term = 10): Promise<APITopic[]> =>
   getJson(`/topics?term=${term}`);
+
+export const fetchBlocs = (term = 10): Promise<APIBlocs> =>
+  getJson(`/blocs?term=${term}`);

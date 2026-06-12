@@ -47,3 +47,29 @@ export interface APITopic {
   topic: string;
   votingCount: number;
 }
+
+export interface APIBlocNode {
+  id: number;
+  firstName: string;
+  lastName: string;
+  club: string | null;
+  defectionScore: number | null;
+}
+
+export interface APIBlocEdge {
+  a: number;
+  b: number;
+  similarity: number;
+}
+
+export interface APIBlocsProvenance extends Provenance {
+  minSharedVotes: number;
+  edgeFloor: number;
+  edgeCap: number;
+}
+
+export interface APIBlocs {
+  nodes: APIBlocNode[];
+  edges: APIBlocEdge[];
+  provenance: APIBlocsProvenance;
+}
