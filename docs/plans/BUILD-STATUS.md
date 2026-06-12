@@ -26,30 +26,23 @@ whole stack into `main` when ready (with approval).
 | 4 | FastAPI §4 routes on real DB + OpenAPI | live-verified; bills/blocs are 501 [planned] |
 | 5 | DefectionScore, VoteBar, MPCard, SearchBar, virtualised DataTable | a11y + 460-row tests |
 | 6 | MP list (§3.1) + MP detail (§3.2) pages on the real API, router | page tests mock the client |
+| QP | quality pass: per-vote defection flags → §3.2 timeline; DataTable arrow-keys/aria-rowcount/X-of-Y; 404 route | flags cross-check the score endpoint exactly on real data |
+| 7 | pair_similarities (TDD), real `/blocs` route, D3 BlocGraph + BlocsPage with text-table fallback | live: 200 nodes / 2000 edges with provenance |
+| 8 | axe-core a11y tests (3 pages), GitHub Actions CI (backend + frontend jobs, service Postgres), truthful README, dropped unused pandas/networkx deps | 54 backend + 71 frontend tests green |
 
-Tests at handoff: **43 backend + 49 frontend = 92**, all green. Lint/types/build
-clean; design-guard clean on all UI files.
-
-## Remaining
-
-- **Phase 7 — BlocGraph (council-review the plan first).** D3 force graph per
-  §3.3: node size by defection, party colours, threshold slider, party filter,
-  200-node cap, pause on hidden tab, plus the text-table a11y fallback. Wire
-  the `/blocs` route (currently 501) to real co-voting data.
-- **Phase 8 — harden + document.** axe-core a11y tests on the pages, GitHub
-  Actions CI (lint + typecheck + tests, frontend & backend), README updated to
-  built-vs-[planned] truthfully (no stats/streak/GitHub widgets).
+**All phases complete.** Tests: **54 backend + 71 frontend = 125**, all green.
+Lint/types/build clean; design-guard clean on all UI files.
 
 ## Known honest gaps (don't paper over)
 
-- `/bills`, `/bills/{id}`, `/blocs` return **501 [planned]** — bills (Sejm
-  "prints") not ingested; blocs are Phase 7.
-- MP detail shows a real **vote-breakdown** chart, not a per-vote "defection
-  timeline" (§3.2). The timeline needs the API to flag each vote as a defection
-  — a small `/mps/{id}/votes` extension (compute via `analysis.metrics`).
+- `/bills`, `/bills/{id}` return **501 [planned]** — bills (Sejm "prints") are
+  not ingested.
 - The real ingest is **bounded** to 80 votings (`--max-votings`); a full term is
   thousands. Re-run `python -m ingestion --term 10` (no cap) to backfill; it's
   resumable.
+- axe's color-contrast rule can't run under jsdom (no paint); contrast is
+  covered at token level by the §5 audit.
+- CI exists but has never run on GitHub (nothing pushed yet by instruction).
 
 ## Local environment (must be running)
 
