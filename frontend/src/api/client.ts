@@ -1,8 +1,11 @@
 /** Typed fetch client for the CivicLens API.
  *
- * Base URL comes from VITE_API_URL (default localhost:8099 for local dev).
- * Non-2xx responses throw, so callers/hooks surface a real error state rather
- * than rendering fabricated data.
+ * Base URL comes from VITE_API_URL, defaulting to the same-origin `/api` path.
+ * Both deployments serve the API there: nginx proxies `/api` in the Docker
+ * image, and the Vite dev server proxies it to localhost:8099 (see
+ * vite.config.ts) — so the browser never makes a cross-origin request and no
+ * CORS is needed. Non-2xx responses throw, so callers/hooks surface a real
+ * error state rather than rendering fabricated data.
  */
 import type {
   APIBlocs,
@@ -13,8 +16,7 @@ import type {
   APIVote,
 } from './types';
 
-const BASE_URL =
-  import.meta.env.VITE_API_URL ?? 'http://localhost:8099';
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`);
