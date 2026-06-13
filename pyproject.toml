@@ -10,6 +10,7 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "psycopg[binary]",
+    "numpy",          # vectorised co-voting kernel (analysis.metrics.pair_similarities)
 ]
 
 [project.optional-dependencies]

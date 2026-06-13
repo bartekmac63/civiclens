@@ -17,9 +17,12 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
-from itertools import combinations
+
+import numpy as np
 
 COUNTABLE = frozenset({"YES", "NO", "ABSTAIN"})
+# Integer codes for the vectorised co-voting kernel; 0 means "did not count".
+_VOTE_CODE = {"YES": 1, "NO": 2, "ABSTAIN": 3}
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,27 +123,64 @@ def pair_similarities(
     as participation). Pairs with fewer than ``min_shared`` shared votings are
     excluded rather than given an unreliable number. Keys are ``(low, high)``
     MP-id tuples.
+
+    Vectorised: with a (votings × MPs) integer vote matrix ``V`` (0 = no
+    countable vote), co-participation is ``Pᵀ·P`` and agreements are
+    ``Σₖ (V==k)ᵀ·(V==k)``. This keeps the §3.3 graph interactive at full term
+    (~2M votes), where the naive per-pair loop took ~45s.
     """
-    by_voting: dict[Hashable, list[tuple[int, str]]] = defaultdict(list)
+    # Collect countable cells, then index votings and MPs. MP ids are sorted so
+    # upper-triangle pairs come out (low, high), matching the documented key order.
+    voting_raw: list[Hashable] = []
+    mp_raw: list[int] = []
+    code_raw: list[int] = []
     for r in records:
         if r.vote in COUNTABLE:
-            assert r.vote is not None
-            by_voting[r.voting_id].append((r.mp_id, r.vote))
+            voting_raw.append(r.voting_id)
+            mp_raw.append(r.mp_id)
+            code_raw.append(_VOTE_CODE[r.vote])
 
-    shared: dict[tuple[int, int], int] = defaultdict(int)
-    agreements: dict[tuple[int, int], int] = defaultdict(int)
-    for voters in by_voting.values():
-        voters.sort()  # ascending mp_id → pair keys come out (low, high)
-        for (mp_a, vote_a), (mp_b, vote_b) in combinations(voters, 2):
-            pair = (mp_a, mp_b)
-            shared[pair] += 1
-            if vote_a == vote_b:
-                agreements[pair] += 1
+    if not code_raw:
+        return {}
+
+    voting_ids = list(dict.fromkeys(voting_raw))  # first-seen order, deduped
+    voting_index = {v: i for i, v in enumerate(voting_ids)}
+    mp_ids = sorted(set(mp_raw))
+    mp_index = {mp: i for i, mp in enumerate(mp_ids)}
+    n_votings, n_mps = len(voting_ids), len(mp_ids)
+
+    # Fill the (votings × MPs) code matrix with one vectorised assignment.
+    rows_idx = np.fromiter((voting_index[v] for v in voting_raw), dtype=np.intp)
+    cols_idx = np.fromiter((mp_index[m] for m in mp_raw), dtype=np.intp)
+    votes = np.zeros((n_votings, n_mps), dtype=np.int8)
+    votes[rows_idx, cols_idx] = np.asarray(code_raw, dtype=np.int8)
+
+    # Counts fit exactly in float32 (≤ n_votings ≪ 2²⁴), so we use float matmul
+    # to get BLAS acceleration — integer matmul falls back to a slow loop.
+    participated = (votes > 0).astype(np.float32)
+    shared = participated.T @ participated
+    agreements = np.zeros((n_mps, n_mps), dtype=np.float32)
+    for code in _VOTE_CODE.values():
+        same = (votes == code).astype(np.float32)
+        agreements += same.T @ same
+
+    # The matmul produced exact integer counts; recover them and divide in
+    # Python so the ratios are bit-identical to a plain agreements/shared.
+    rows, cols = np.triu_indices(n_mps, k=1)
+    shared_counts = np.rint(shared[rows, cols]).astype(np.int64)
+    keep = shared_counts >= min_shared
+    rows, cols, shared_counts = rows[keep], cols[keep], shared_counts[keep]
+    agree_counts = np.rint(agreements[rows, cols]).astype(np.int64)
 
     return {
-        pair: agreements[pair] / count
-        for pair, count in shared.items()
-        if count >= min_shared
+        (mp_ids[i], mp_ids[j]): a / s
+        for i, j, a, s in zip(
+            rows.tolist(),
+            cols.tolist(),
+            agree_counts.tolist(),
+            shared_counts.tolist(),
+            strict=True,
+        )
     }
 
 
