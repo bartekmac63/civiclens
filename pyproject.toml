@@ -30,6 +30,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["ingestion", "analysis", "api", "api.routers"]
 
+[tool.setuptools.package-data]
+# Ship the SQL migrations so a non-editable `pip install .` (the Docker image)
+# can create the schema via `python -m ingestion.migrate`.
+ingestion = ["migrations/*.sql"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"

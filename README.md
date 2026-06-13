@@ -55,16 +55,25 @@ pip install -e ".[dev]"          # backend (ingestion + analysis + API)
 cd frontend && npm install      # frontend
 ```
 
-### Running locally
+### Running with Docker (whole stack)
 
 ```bash
-docker-compose up -d postgres            # or any local PostgreSQL on :5432
+docker compose up --build            # Postgres + API (:8099) + frontend (:8080)
+docker compose run --rm ingest       # load real Sejm data (uncapped term-10 backfill)
+```
+
+The API migrates the schema on start, so it comes up against an empty store (endpoints return `[]`, never fabricated data) and fills in once `ingest` has run. The frontend is served by nginx on http://localhost:8080 and reverse-proxies `/api/*` to the API, so there is one origin and no CORS. Bound the backfill with e.g. `docker compose run --rm ingest --term 10 --max-votings 200`.
+
+### Running locally (without Docker)
+
+```bash
+docker compose up -d postgres            # or any local PostgreSQL on :5432
 python -m ingestion --term 10            # migrate + ingest (add --max-votings N to bound it)
 uvicorn api.main:app --reload --port 8099
 cd frontend && npm run dev               # http://localhost:5173
 ```
 
-The database DSN defaults to `postgresql://civiclens:civiclens@localhost:5432/civiclens`; override with `DATABASE_URL`. The frontend reads the API base from `VITE_API_URL` (default `http://localhost:8099`).
+The database DSN defaults to `postgresql://civiclens:civiclens@localhost:5432/civiclens`; override with `DATABASE_URL`. In local dev the frontend reads the API base from `VITE_API_URL` (default `http://localhost:8099`).
 
 ### Tests
 
@@ -85,10 +94,10 @@ All data comes from the official Sejm API at https://api.sejm.gov.pl — it is f
 - [x] Voting-pattern metrics (cohesion, defection score, co-voting similarity)
 - [x] REST API over MPs and metrics
 - [x] React frontend (MP list, MP detail, bloc graph)
-- [x] CI (GitHub Actions)
+- [x] CI (GitHub Actions, incl. a Docker compose smoke test)
+- [x] Full-term vote backfill (~1.95M votes)
+- [x] Dockerised stack (Postgres + API + frontend) via `docker compose`
 - [ ] Bills (Sejm prints) ingestion and `/bills` routes
-- [ ] Full-term vote backfill
-- [ ] Dockerised API + frontend services
 
 ## Contributing
 
