@@ -6,18 +6,13 @@ from datetime import UTC, datetime
 from typing import Any
 
 import psycopg
-from analysis import metrics
-from analysis.data import load_vote_records
+from analysis import cache, metrics
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.dependencies import get_conn
 from api.schemas import APIMP, APIDefectionScore, APIMPDetail, APIVote, Provenance
 
 router = APIRouter(tags=["mps"])
-
-
-def _defection_scores(conn: psycopg.Connection, term: int) -> dict[int, float | None]:
-    return metrics.defection_scores(load_vote_records(conn, term))
 
 
 def _electronic_voting_count(conn: psycopg.Connection, term: int) -> int:
@@ -48,7 +43,7 @@ def _require_mp(conn: psycopg.Connection, mp_id: int, term: int) -> tuple[Any, .
 def list_mps(
     term: int = 10, conn: psycopg.Connection = Depends(get_conn)
 ) -> list[APIMP]:
-    scores = _defection_scores(conn, term)
+    scores = cache.defection_scores(conn, term)
     rows = conn.execute(
         """
         SELECT id, first_name, last_name, club, district_name
@@ -74,7 +69,7 @@ def get_mp(
     mp_id: int, term: int = 10, conn: psycopg.Connection = Depends(get_conn)
 ) -> APIMPDetail:
     row = _require_mp(conn, mp_id, term)
-    score = _defection_scores(conn, term).get(mp_id)
+    score = cache.defection_scores(conn, term).get(mp_id)
     return APIMPDetail(
         id=row[0],
         firstName=row[1],
@@ -109,7 +104,7 @@ def get_mp_votes(
         (term, mp_id),
     ).fetchall()
     # Per-vote defection flags need the whole term's votes (club majorities).
-    flags = metrics.defection_flags(load_vote_records(conn, term), mp_id=mp_id)
+    flags = metrics.defection_flags(cache.vote_records(conn, term), mp_id=mp_id)
     return [
         APIVote(
             sitting=r[0],
@@ -130,7 +125,7 @@ def get_mp_defection_score(
     mp_id: int, term: int = 10, conn: psycopg.Connection = Depends(get_conn)
 ) -> APIDefectionScore:
     _require_mp(conn, mp_id, term)
-    score = _defection_scores(conn, term).get(mp_id)
+    score = cache.defection_scores(conn, term).get(mp_id)
     return APIDefectionScore(
         mpId=mp_id,
         term=term,

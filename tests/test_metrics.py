@@ -6,6 +6,8 @@ cannot silently pass. See docs/plans/phase-3-analysis.md for the contract.
 
 from __future__ import annotations
 
+from collections.abc import Hashable
+
 from analysis.metrics import (
     VoteRecord,
     club_cohesion,
@@ -207,3 +209,36 @@ def test_pair_keys_are_ordered_low_high() -> None:
     records = [rec(1, 9, "A", "YES"), rec(1, 3, "A", "YES")]
     sims = pair_similarities(records, min_shared=1)
     assert (3, 9) in sims and (9, 3) not in sims
+
+
+def test_pair_similarities_matches_independent_bruteforce() -> None:
+    # Guards the vectorised kernel against a naive reference oracle on a larger,
+    # randomised input — covers the all-pairs case the small fixtures don't.
+    import random
+    from itertools import combinations
+
+    rng = random.Random(20260613)
+    choices = ["YES", "NO", "ABSTAIN", "ABSENT"]  # ABSENT is non-countable
+    records = [
+        rec(voting, mp, "A", rng.choice(choices))
+        for voting in range(30)
+        for mp in range(12)
+        if rng.random() < 0.85  # leave gaps so participation differs per pair
+    ]
+
+    # Independent oracle: count shared/agreed over countable co-participation.
+    countable = {"YES", "NO", "ABSTAIN"}
+    by_voting: dict[Hashable, dict[int, str]] = {}
+    for r in records:
+        if r.vote in countable:
+            by_voting.setdefault(r.voting_id, {})[r.mp_id] = r.vote
+    shared: dict[tuple[int, int], int] = {}
+    agreed: dict[tuple[int, int], int] = {}
+    for votes in by_voting.values():
+        for a, b in combinations(sorted(votes), 2):
+            shared[(a, b)] = shared.get((a, b), 0) + 1
+            if votes[a] == votes[b]:
+                agreed[(a, b)] = agreed.get((a, b), 0) + 1
+    expected = {pair: agreed.get(pair, 0) / n for pair, n in shared.items() if n >= 5}
+
+    assert pair_similarities(records, min_shared=5) == expected
