@@ -1,0 +1,18 @@
+# Keep the backend build context small and reproducible.
+.git
+.github
+.venv
+.pgdata
+.mypy_cache
+.pytest_cache
+.ruff_cache
+**/__pycache__
+*.egg-info
+frontend
+docs
+tests
+.DS_Store
+CLAUDE*.md
+docker-compose.yml
+Dockerfile
+.dockerignore

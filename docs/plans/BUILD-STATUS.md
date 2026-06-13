@@ -29,9 +29,11 @@ GitHub's 2026-06-16 forced switch). Work from here: branch off `main`, PR back.
 | 7 | pair_similarities (TDD), real `/blocs` route, D3 BlocGraph + BlocsPage with text-table fallback | live: 200 nodes / 2000 edges with provenance |
 | 8 | axe-core a11y tests (3 pages), GitHub Actions CI (backend + frontend jobs, service Postgres), truthful README | 60 backend + 71 frontend tests green |
 | 9 | full-term backfill + scale hardening: PRESENT-vote fix (PR #4), NumPy-vectorised co-voting kernel (47s→0.3s), in-process analysis cache | live: /mps 7ms warm, /blocs 17ms warm on ~2M votes |
+| 10 | real Docker deployment: backend + frontend (nginx, /api proxy) images, full `docker compose` stack, `python -m ingestion.migrate` entrypoint, CI compose smoke test | compose smoke test runs in CI (build → up → /health, /mps, 501, frontend proxy) |
 
-**All phases complete.** Tests: **60 backend + 71 frontend = 131**, all green.
-Lint/types/build clean; design-guard clean on all UI files.
+**All phases complete.** Tests: **61 backend + 71 frontend = 132**, all green.
+Lint/types/build clean; design-guard clean on all UI files. CI has three jobs
+(backend, frontend, docker).
 
 ## Scale + performance (2026-06-13)
 

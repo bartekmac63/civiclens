@@ -65,3 +65,38 @@ jobs:
         run: npm run test
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker (build images · compose smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build images
+        run: docker compose build
+      - name: Bring up Postgres + API (API migrates on start)
+        run: docker compose up -d postgres api
+      - name: Wait for the API to become healthy
+        run: |
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q api)" 2>/dev/null || echo starting)
+            echo "api health: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 3
+          done
+          echo "API never became healthy"; docker compose logs api; exit 1
+      - name: Smoke-test the API (empty store, no fabricated data)
+        run: |
+          curl -fsS http://localhost:8099/health | grep -q healthy
+          curl -fsS "http://localhost:8099/mps?term=10"   # 200 with []
+          curl -fsS -o /dev/null -w '%{http_code}' http://localhost:8099/bills | grep -q 501
+      - name: Bring up the frontend and verify it proxies /api to the backend
+        run: |
+          docker compose up -d frontend
+          for i in $(seq 1 20); do
+            curl -fsS http://localhost:8080/ >/dev/null 2>&1 && break || sleep 3
+          done
+          curl -fsS http://localhost:8080/ | grep -qi '<div id="root"'
+          curl -fsS http://localhost:8080/api/health | grep -q healthy
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
