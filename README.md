@@ -10,11 +10,11 @@ The Sejm publishes a large volume of open data — votes, sittings, MPs, clubs, 
 
 - **Built** — Ingestion pipeline mirroring Sejm terms, MPs, clubs, votings, and individual MP votes into PostgreSQL, with provenance (`fetched_at`) on every row
 - **Built** — Incremental sync that fetches only the votings missing since the last run (idempotent upserts; resumable; fails loudly rather than seeding fake data)
-- **Built** — Voting-pattern analysis: club cohesion (Rice index), per-MP defection scoring with per-vote defection flags, and pairwise co-voting similarity — all developed test-first against hand-checked fixtures; insufficient data yields `null`, never a fabricated zero
-- **Built** — REST API (FastAPI, typed responses + OpenAPI): `/mps`, `/mps/{id}`, `/mps/{id}/votes`, `/mps/{id}/defection-score`, `/topics`, `/blocs`
+- **Built** — Full 10th-term vote corpus ingested: 4,239 votings (4,233 electronic) and ~1.95M individual MP votes through 2026-06-11, with provenance on every row
+- **Built** — Voting-pattern analysis: club cohesion (Rice index), per-MP defection scoring with per-vote defection flags, and pairwise co-voting similarity (vectorised with NumPy to stay interactive over ~2M votes) — all developed test-first against hand-checked fixtures; insufficient data yields `null`, never a fabricated zero
+- **Built** — REST API (FastAPI, typed responses + OpenAPI): `/mps`, `/mps/{id}`, `/mps/{id}/votes`, `/mps/{id}/defection-score`, `/topics`, `/blocs`, with an in-process analysis cache invalidated automatically when new votings are ingested
 - **Built** — React + TypeScript + Tailwind frontend: searchable virtualised MP table, MP detail with a defection-score timeline, and a D3 force-directed co-voting bloc graph with an accessible table fallback
 - [planned] Bills (Sejm "prints") ingestion — `/bills` currently returns an honest `501`
-- [planned] Full-term vote backfill — a bounded real ingest (80 votings / 36,800 MP votes, 10th term) is loaded and verified; the full term is one resumable `python -m ingestion --term 10` away
 
 ## Architecture
 
@@ -32,7 +32,7 @@ See `docs/architecture.md` for the full diagram and `docs/design-system.md` for 
 |---|---|
 | Ingestion | Python, httpx |
 | Storage | PostgreSQL |
-| Analysis | Python (pure, fixture-tested core) |
+| Analysis | Python + NumPy (fixture-tested core) |
 | Backend API | FastAPI |
 | Frontend | React, TypeScript, Tailwind CSS, TanStack Table/Virtual, D3, Recharts |
 | Deployment | Docker, docker-compose |

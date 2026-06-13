@@ -27,10 +27,24 @@ GitHub's 2026-06-16 forced switch). Work from here: branch off `main`, PR back.
 | 6 | MP list (§3.1) + MP detail (§3.2) pages on the real API, router | page tests mock the client |
 | QP | quality pass: per-vote defection flags → §3.2 timeline; DataTable arrow-keys/aria-rowcount/X-of-Y; 404 route | flags cross-check the score endpoint exactly on real data |
 | 7 | pair_similarities (TDD), real `/blocs` route, D3 BlocGraph + BlocsPage with text-table fallback | live: 200 nodes / 2000 edges with provenance |
-| 8 | axe-core a11y tests (3 pages), GitHub Actions CI (backend + frontend jobs, service Postgres), truthful README, dropped unused pandas/networkx deps | 54 backend + 71 frontend tests green |
+| 8 | axe-core a11y tests (3 pages), GitHub Actions CI (backend + frontend jobs, service Postgres), truthful README | 60 backend + 71 frontend tests green |
+| 9 | full-term backfill + scale hardening: PRESENT-vote fix (PR #4), NumPy-vectorised co-voting kernel (47s→0.3s), in-process analysis cache | live: /mps 7ms warm, /blocs 17ms warm on ~2M votes |
 
-**All phases complete.** Tests: **54 backend + 71 frontend = 125**, all green.
+**All phases complete.** Tests: **60 backend + 71 frontend = 131**, all green.
 Lint/types/build clean; design-guard clean on all UI files.
+
+## Scale + performance (2026-06-13)
+
+- **Full 10th term ingested**: 4,239 votings (4,233 ELECTRONIC) / **1,947,838 MP
+  votes** through 2026-06-11. The bounded 80-voting demo is gone.
+- At that scale the analysis recompute-per-request became the bottleneck:
+  `pair_similarities` was O(votings × MPs²) ≈ 47s. Rewritten as a NumPy matrix
+  kernel (`shared = Pᵀ·P`, `agreements = Σₖ (V==k)ᵀ·(V==k)`, float32 for BLAS) →
+  **0.3s**, proven equivalent to the old pure-Python impl by a brute-force test.
+- `analysis/cache.py` memoises a term's loaded records + derived scores/
+  similarities, keyed by a cheap `(voting count, max voted_at)` signal — a new
+  ingest busts it automatically. `/mps` 2.1s→7ms warm, `/blocs` 0.3s→17ms warm.
+- NumPy is now a real runtime dependency (it earns its place in this kernel).
 
 ## Known honest gaps (don't paper over)
 
@@ -39,10 +53,6 @@ Lint/types/build clean; design-guard clean on all UI files.
   ingestion domain (separate endpoints, schema, routes) and the honesty rule
   prefers a truthful 501 over a rushed feature. Build it as its own phase if
   ever picked up.
-- Full term-10 backfill (uncapped `python -m ingestion --term 10`) started
-  2026-06-12; the Sejm API intermittently drops connections
-  (`RemoteProtocolError`), so it runs in a retry loop. Sync is resumable and
-  idempotent — re-run to continue from wherever it stopped.
 - axe's color-contrast rule can't run under jsdom (no paint); contrast is
   covered at token level by the §5 audit.
 
